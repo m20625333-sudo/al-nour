@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>King Plast Mobile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            background-color: #f1f5f9;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .accordion-open .accordion-content { max-height: 1000px; }
+        .sticky-summary { position: sticky; bottom: 0; z-index: 40; }
+        input, select, button { font-size: 16px !important; } /* يمنع التكبير التلقائي في آيفون */
+        @media print { .no-print { display: none !important; } body { background: white; } }
+    </style>
+</head>
+<body class="pb-32">
+
+    <!-- Top Navbar -->
+    <nav class="bg-blue-900 text-white p-4 sticky top-0 z-50 shadow-md no-print">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-box-open text-xl text-blue-300"></i>
+                <span class="font-black text-lg">King Plast</span>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="exportToCSV()" class="bg-green-600 p-2 px-3 rounded-lg text-xs"><i class="fas fa-file-excel"></i></button>
+                <button onclick="window.print()" class="bg-blue-800 p-2 px-3 rounded-lg text-xs"><i class="fas fa-print"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="p-3 space-y-4">
+        
+        <!-- Customer Search -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm no-print border border-slate-100">
+            <label class="text-[10px] font-bold text-slate-400 mb-1 block">العميل الحالي</label>
+            <input type="text" id="customerName" oninput="loadLedger()" 
+                class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500 p-3 rounded-xl outline-none font-bold transition-all" 
+                placeholder="ادخل اسم العميل...">
+        </div>
+
+        <!-- Price Selection (Accordions) -->
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden no-print border border-slate-100" id="pricesMenu">
+            <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
+                <h3 class="font-bold text-slate-700 text-sm">قائمة المقاسات والأسعار</h3>
+                <i class="fas fa-chevron-down text-slate-400"></i>
+            </div>
+            <div id="priceListContainer">
+                <!-- سيتم التعبئة بواسطة JS -->
+            </div>
+        </div>
+
+        <!-- Addons & Order Action -->
+        <div class="bg-slate-900 text-white p-4 rounded-2xl shadow-lg no-print space-y-4">
+            <div class="grid grid-cols-2 gap-2">
+                <div class="bg-white/10 p-2 rounded-xl">
+                    <label class="text-[9px] opacity-60 block">ألوان إضافية</label>
+                    <select id="extraColors" onchange="calculatePrice()" class="bg-transparent w-full text-xs font-bold outline-none">
+                        <option value="0" class="text-black">لون واحد</option>
+                        <option value="1" class="text-black">لون إضافي 1</option>
+                        <option value="2" class="text-black">لون إضافي 2</option>
+                    </select>
+                </div>
+                <div class="bg-white/10 p-2 rounded-xl">
+                    <label class="text-[9px] opacity-60 block">لون خاص</label>
+                    <select id="specialColor" onchange="calculatePrice()" class="bg-transparent w-full text-xs font-bold outline-none">
+                        <option value="0" class="text-black">عادي</option>
+                        <option value="0.25" class="text-black">ذهبي (+25ق)</option>
+                        <option value="0.20" class="text-black">فضي (+20ق)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex-1">
+                    <span class="text-[9px] opacity-60 uppercase">السعر/ق</span>
+                    <div id="finalUnitPrice" class="text-2xl font-black text-blue-300">0.00</div>
+                </div>
+                <div class="w-1/3">
+                    <label class="text-[9px] opacity-60 block">الكمية</label>
+                    <input type="number" id="qtyInput" class="w-full bg-white/20 border border-white/10 p-2 rounded-lg text-center font-bold outline-none" placeholder="0">
+                </div>
+            </div>
+
+            <button onclick="addTransaction('order')" class="w-full bg-blue-500 hover:bg-blue-400 p-4 rounded-xl font-black flex items-center justify-center gap-2 transition-transform active:scale-95">
+                إضافة للفاتورة <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- Payments -->
+        <div class="bg-green-600 text-white p-4 rounded-2xl shadow-md no-print flex gap-2">
+            <input type="number" id="payAmount" class="w-1/2 bg-white/20 border-none p-3 rounded-xl font-bold placeholder:text-white/50 outline-none" placeholder="مبلغ الدفعة">
+            <button onclick="addTransaction('payment')" class="w-1/2 bg-white text-green-700 font-bold rounded-xl transition-transform active:scale-95">تسجيل دفعة</button>
+        </div>
+
+        <!-- Ledger Table Card -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-xs">سجل الحساب التراكمي</h3>
+                <span id="displayCust" class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold">---</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-[11px] text-right">
+                    <thead class="bg-slate-50 text-slate-400">
+                        <tr>
+                            <th class="p-3 font-medium">البيان</th>
+                            <th class="p-3 text-center">مدين</th>
+                            <th class="p-3 text-center">دائن</th>
+                            <th class="p-3 text-center bg-blue-50/50">الرصيد</th>
+                            <th class="p-3 no-print"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgerBody" class="divide-y divide-slate-50">
+                        <!-- تملأ برمجياً -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Sticky Bottom Summary -->
+    <div class="sticky-summary bg-slate-900 text-white p-4 mx-3 rounded-t-3xl shadow-[0_-10px_20px_rgba(0,0,0,0.1)] no-print">
+        <div class="flex justify-between items-center">
+            <div>
+                <span class="text-[10px] opacity-50 block">صافي المديونية</span>
+                <div id="finalBalance" class="text-3xl font-black text-blue-400">0.00</div>
+            </div>
+            <button onclick="sendWhatsApp()" class="bg-green-500 p-3 px-5 rounded-2xl font-bold flex items-center gap-2">
+                <i class="fab fa-whatsapp text-xl"></i> واتساب
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // قاعدة البيانات المختصرة للموبايل
+        const PRICES = {
+            "شنط يد (داخلية)": [
+                { s: "16×20", p: 1.52 }, { s: "20×30", p: 1.82 }, { s: "25×30", p: 2.03 }, { s: "30×40", p: 3.23 }, { s: "40×50", p: 4.26 }, { s: "50×60", p: 5.94 }
+            ],
+            "شنط يد (خارجية)": [
+                { s: "30×30", p: 2.69 }, { s: "35×40", p: 3.51 }, { s: "40×50", p: 4.46 }, { s: "50×60", p: 6.14 }, { s: "60×70", p: 8.13 }
+            ],
+            "شنط بوكس (Box)": [
+                { s: "20×30", p: 3.37 }, { s: "30×40", p: 4.39 }, { s: "40×50", p: 5.82 }
+            ],
+            "شنطة تورتة": [
+                { s: "30×30", p: 3.11 }, { s: "35×35", p: 3.91 }, { s: "40×40", p: 5.80 }
+            ]
+        };
+
+        let appData = JSON.parse(localStorage.getItem('king_mobile_v1')) || {};
+        let activeBase = 0;
+        let activeProd = { c: "", s: "" };
+
+        window.onload = () => {
+            renderAccordions();
+        };
+
+        function renderAccordions() {
+            const container = document.getElementById('priceListContainer');
+            for (let [cat, items] of Object.entries(PRICES)) {
+                let html = `
+                    <div class="border-b last:border-0 accordion-item">
+                        <button onclick="this.parentElement.classList.toggle('accordion-open')" class="w-full p-4 flex justify-between items-center text-sm font-bold text-slate-600">
+                            ${cat} <i class="fas fa-chevron-left text-[10px] transition-transform"></i>
+                        </button>
+                        <div class="accordion-content bg-slate-50 grid grid-cols-2 gap-2 p-0">
+                            <div class="grid grid-cols-2 gap-2 p-3 w-[200%] md:w-full">
+                                ${items.map(it => `
+                                    <button onclick="selectItem('${cat}', '${it.s}', ${it.p})" class="p-2 border rounded-lg bg-white text-[10px] flex justify-between item-btn" data-size="${it.s}">
+                                        <span>${it.s}</span> <b>${it.p}</b>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>`;
+                container.innerHTML += html;
+            }
+        }
+
+        function selectItem(cat, size, price) {
+            activeBase = price;
+            activeProd = { c: cat, s: size };
+            document.querySelectorAll('.item-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-blue-50'));
+            event.currentTarget.classList.add('border-blue-500', 'bg-blue-50');
+            calculatePrice();
+        }
+
+        function calculatePrice() {
+            if (!activeBase) return;
+            let p = activeBase;
+            p += (parseInt(document.getElementById('extraColors').value) * 0.15);
+            p += parseFloat(document.getElementById('specialColor').value);
+            document.getElementById('finalUnitPrice').innerText = p.toFixed(2);
+        }
+
+        function addTransaction(type) {
+            const name = document.getElementById('customerName').value.trim();
+            if (!name) return alert("اكتب اسم العميل");
+            if (!appData[name]) appData[name] = [];
+
+            let entry = { ts: Date.now(), d: new Date().toLocaleDateString('ar-EG'), db: 0, cr: 0, desc: "" };
+
+            if (type === 'order') {
+                const final = parseFloat(document.getElementById('finalUnitPrice').innerText);
+                const qty = parseInt(document.getElementById('qtyInput').value);
+                if (!qty) return alert("ادخل الكمية");
+                entry.db = final * qty;
+                entry.desc = `${activeProd.s} (${qty}ق)`;
+            } else {
+                const amt = parseFloat(document.getElementById('payAmount').value);
+                if (!amt) return alert("ادخل المبلغ");
+                entry.cr = amt;
+                entry.desc = "دفعة نقدية";
+            }
+
+            appData[name].push(entry);
+            save();
+            document.getElementById('qtyInput').value = "";
+            document.getElementById('payAmount').value = "";
+        }
+
+        function loadLedger() {
+            const name = document.getElementById('customerName').value.trim();
+            document.getElementById('displayCust').innerText = name || "---";
+            renderTable();
+        }
+
+        function renderTable() {
+            const name = document.getElementById('customerName').value.trim();
+            const body = document.getElementById('ledgerBody');
+            body.innerHTML = "";
+            let balance = 0;
+
+            if (appData[name]) {
+                appData[name].forEach((t, i) => {
+                    balance += (t.db - t.cr);
+                    body.innerHTML += `
+                        <tr class="border-b border-slate-50">
+                            <td class="p-3">
+                                <div class="font-bold">${t.desc}</div>
+                                <div class="text-[8px] text-slate-400">${t.d}</div>
+                            </td>
+                            <td class="p-3 text-center text-red-500 font-bold">${t.db || '-'}</td>
+                            <td class="p-3 text-center text-green-600 font-bold">${t.cr || '-'}</td>
+                            <td class="p-3 text-center bg-blue-50/30 font-black">${balance.toLocaleString()}</td>
+                            <td class="p-3 no-print">
+                                <button onclick="deleteEntry('${name}', ${i})" class="text-slate-200"><i class="fas fa-times-circle"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('finalBalance').innerText = balance.toLocaleString();
+        }
+
+        function deleteEntry(n, i) {
+            if(confirm("حذف؟")) { appData[n].splice(i, 1); save(); }
+        }
+
+        function save() {
+            localStorage.setItem('king_mobile_v1', JSON.stringify(appData));
+            renderTable();
+        }
+
+        function sendWhatsApp() {
+            const name = document.getElementById('customerName').value;
+            const bal = document.getElementById('finalBalance').innerText;
+            window.open(`https://wa.me/?text=*كينج بلاست*%0A*كشف حساب:* ${name}%0A*الرصيد النهائي:* ${bal} ج.م`, '_blank');
+        }
+
+        function exportToCSV() {
+            const name = document.getElementById('customerName').value;
+            if(!appData[name]) return;
+            let csv = "\uFEFFالبيان,مدين,دائن,الرصيد\n";
+            let b = 0;
+            appData[name].forEach(t => { b += (t.db-t.cr); csv += `${t.desc},${t.db},${t.cr},${b}\n`; });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+            link.download = `حساب_${name}.csv`;
+            link.click();
+        }
+    </script>
+</body>
+</html>
