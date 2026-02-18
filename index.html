@@ -3,290 +3,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>King Plast Mobile</title>
+    <title>King Plast - Pro Flex System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-        body { 
-            font-family: 'Cairo', sans-serif; 
-            background-color: #f1f5f9;
-            -webkit-tap-highlight-color: transparent;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
         .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
         .accordion-open .accordion-content { max-height: 1000px; }
-        .sticky-summary { position: sticky; bottom: 0; z-index: 40; }
-        input, select, button { font-size: 16px !important; } /* يمنع التكبير التلقائي في آيفون */
-        @media print { .no-print { display: none !important; } body { background: white; } }
+        .btn-active { background-color: #1e3a8a !important; color: white !important; }
+        input, select { font-size: 16px !important; }
+        .mode-selected { background-color: #1e3a8a !important; color: white !important; border-color: #1e3a8a !important; }
     </style>
 </head>
-<body class="pb-32">
+<body class="pb-24">
 
-    <!-- Top Navbar -->
-    <nav class="bg-blue-900 text-white p-4 sticky top-0 z-50 shadow-md no-print">
-        <div class="flex justify-between items-center">
+    <!-- Header -->
+    <header class="bg-blue-900 text-white p-4 sticky top-0 z-50 shadow-md">
+        <div class="flex justify-between items-center max-w-lg mx-auto">
             <div class="flex items-center gap-2">
-                <i class="fas fa-box-open text-xl text-blue-300"></i>
-                <span class="font-black text-lg">King Plast</span>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="exportToCSV()" class="bg-green-600 p-2 px-3 rounded-lg text-xs"><i class="fas fa-file-excel"></i></button>
-                <button onclick="window.print()" class="bg-blue-800 p-2 px-3 rounded-lg text-xs"><i class="fas fa-print"></i></button>
-            </div>
-        </div>
-    </nav>
-
-    <div class="p-3 space-y-4">
-        
-        <!-- Customer Search -->
-        <div class="bg-white p-4 rounded-2xl shadow-sm no-print border border-slate-100">
-            <label class="text-[10px] font-bold text-slate-400 mb-1 block">العميل الحالي</label>
-            <input type="text" id="customerName" oninput="loadLedger()" 
-                class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500 p-3 rounded-xl outline-none font-bold transition-all" 
-                placeholder="ادخل اسم العميل...">
-        </div>
-
-        <!-- Price Selection (Accordions) -->
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden no-print border border-slate-100" id="pricesMenu">
-            <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
-                <h3 class="font-bold text-slate-700 text-sm">قائمة المقاسات والأسعار</h3>
-                <i class="fas fa-chevron-down text-slate-400"></i>
-            </div>
-            <div id="priceListContainer">
-                <!-- سيتم التعبئة بواسطة JS -->
-            </div>
-        </div>
-
-        <!-- Addons & Order Action -->
-        <div class="bg-slate-900 text-white p-4 rounded-2xl shadow-lg no-print space-y-4">
-            <div class="grid grid-cols-2 gap-2">
-                <div class="bg-white/10 p-2 rounded-xl">
-                    <label class="text-[9px] opacity-60 block">ألوان إضافية</label>
-                    <select id="extraColors" onchange="calculatePrice()" class="bg-transparent w-full text-xs font-bold outline-none">
-                        <option value="0" class="text-black">لون واحد</option>
-                        <option value="1" class="text-black">لون إضافي 1</option>
-                        <option value="2" class="text-black">لون إضافي 2</option>
-                    </select>
-                </div>
-                <div class="bg-white/10 p-2 rounded-xl">
-                    <label class="text-[9px] opacity-60 block">لون خاص</label>
-                    <select id="specialColor" onchange="calculatePrice()" class="bg-transparent w-full text-xs font-bold outline-none">
-                        <option value="0" class="text-black">عادي</option>
-                        <option value="0.25" class="text-black">ذهبي (+25ق)</option>
-                        <option value="0.20" class="text-black">فضي (+20ق)</option>
-                    </select>
+                <i class="fas fa-crown text-yellow-400"></i>
+                <div>
+                    <h1 class="font-black text-sm uppercase">King Plast</h1>
+                    <p class="text-[9px] opacity-70">01279039059</p>
                 </div>
             </div>
+            <div class="flex gap-1 bg-white/10 p-1 rounded-xl">
+                <button onclick="switchTab('ledger')" id="btn-ledger" class="p-2 px-4 rounded-lg text-xs font-bold transition-all">السجل</button>
+                <button onclick="switchTab('entry')" id="btn-entry" class="p-2 px-4 rounded-lg text-xs font-bold transition-all btn-active">إضافة</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-lg mx-auto p-3 space-y-4">
+
+        <!-- Tab: Entry Form -->
+        <div id="tab-entry" class="tab-content active space-y-4">
             
-            <div class="flex items-center justify-between gap-4">
-                <div class="flex-1">
-                    <span class="text-[9px] opacity-60 uppercase">السعر/ق</span>
-                    <div id="finalUnitPrice" class="text-2xl font-black text-blue-300">0.00</div>
+            <!-- Customer & Date -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2">
+                        <label class="text-[10px] font-bold text-slate-400 block mb-1">اسم العميل</label>
+                        <input type="text" id="custName" class="w-full p-3 bg-slate-50 rounded-xl border-none outline-none font-bold text-sm focus:ring-2 ring-blue-500" placeholder="ادخل اسم العميل...">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-[10px] font-bold text-slate-400 block mb-1">تاريخ اليوم</label>
+                        <input type="date" id="orderDate" class="w-full p-3 bg-slate-50 rounded-xl border-none outline-none text-xs font-bold">
+                    </div>
                 </div>
-                <div class="w-1/3">
-                    <label class="text-[9px] opacity-60 block">الكمية</label>
-                    <input type="number" id="qtyInput" class="w-full bg-white/20 border border-white/10 p-2 rounded-lg text-center font-bold outline-none" placeholder="0">
+            </div>
+
+            <!-- Calculation Mode Toggle -->
+            <div class="flex gap-2 p-1 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                <button onclick="setCalcMode('printed')" id="mode-printed" class="flex-1 p-3 rounded-xl font-black text-xs transition-all mode-selected">
+                    <i class="fas fa-print ml-1"></i> مطبوع (بالقطعة)
+                </button>
+                <button onclick="setCalcMode('plain')" id="mode-plain" class="flex-1 p-3 rounded-xl font-black text-xs transition-all bg-slate-50 text-slate-400 border border-transparent">
+                    <i class="fas fa-box ml-1"></i> سادة (بالكيلو)
+                </button>
+            </div>
+
+            <!-- Price Accordions (Only for Printed) -->
+            <div id="priceMenuContainer" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-3 bg-slate-100 border-b flex justify-between items-center">
+                    <span class="font-bold text-slate-700 text-xs text-blue-800">قائمة مقاسات المطبوع</span>
+                </div>
+                <div id="priceMenu" class="divide-y divide-slate-100"></div>
+            </div>
+
+            <!-- Main Calculation Box -->
+            <div class="bg-slate-900 text-white p-5 rounded-3xl shadow-xl space-y-4">
+                
+                <!-- Flexible Price Input -->
+                <div id="dynamicPriceBox" class="bg-white/5 p-3 rounded-2xl border border-white/10">
+                    <label id="priceInputLabel" class="text-[10px] text-blue-300 font-bold block mb-1">سعر القطعة (إدخال مرن)</label>
+                    <input type="number" id="unitPriceInput" oninput="calc()" step="0.01" class="w-full bg-transparent text-xl font-black outline-none text-white" placeholder="0.00">
+                </div>
+
+                <!-- Color Options (Hidden in Plain mode) -->
+                <div id="colorOptions" class="grid grid-cols-2 gap-2">
+                    <div class="bg-white/5 p-2 rounded-xl">
+                        <label class="text-[9px] opacity-50 block mb-1">ألوان إضافية</label>
+                        <select id="colorAdd" onchange="calc()" class="bg-transparent w-full font-bold outline-none text-xs">
+                            <option value="0" class="text-black">لون واحد</option>
+                            <option value="0.15" class="text-black">1 لون (+15ق)</option>
+                            <option value="0.30" class="text-black">2 لون (+30ق)</option>
+                            <option value="0.50" class="text-black">4 ألوان (+50ق)</option>
+                        </select>
+                    </div>
+                    <div class="bg-white/5 p-2 rounded-xl">
+                        <label class="text-[9px] opacity-50 block mb-1">تلوين خاص</label>
+                        <select id="specialAdd" onchange="calc()" class="bg-transparent w-full font-bold outline-none text-xs">
+                            <option value="0" class="text-black">عادي</option>
+                            <option value="0.25" class="text-black">ذهبي (+25ق)</option>
+                            <option value="0.20" class="text-black">سيلفر (+20ق)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Inputs Grid -->
+                <div class="grid grid-cols-3 gap-2">
+                    <div id="qtyBox" class="bg-white/5 p-2 rounded-xl text-center border border-white/10">
+                        <label class="text-[9px] opacity-40 block">العدد (قطعة)</label>
+                        <input type="number" id="qty" oninput="calc()" class="w-full bg-transparent text-center font-bold outline-none" placeholder="0">
+                    </div>
+                    <div id="weightBox" class="bg-white/5 p-2 rounded-xl text-center border border-white/10">
+                        <label class="text-[9px] opacity-40 block">الوزن (كجم)</label>
+                        <input type="number" id="weight" oninput="calc()" step="0.01" class="w-full bg-transparent text-center font-bold outline-none" placeholder="0.00">
+                    </div>
+                    <div class="bg-yellow-500/20 p-2 rounded-xl text-center border border-yellow-500/30">
+                        <label class="text-[9px] text-yellow-500 block">الخصم %</label>
+                        <input type="number" id="discount" oninput="calc()" class="w-full bg-transparent text-center font-bold text-yellow-500 outline-none" placeholder="0">
+                    </div>
+                </div>
+
+                <!-- Totals -->
+                <div class="flex justify-between items-center border-t border-white/10 pt-4">
+                    <div>
+                        <span id="unitLabelDisp" class="text-[9px] opacity-40 block uppercase">صافي سعر الوحدة</span>
+                        <div id="finalUnitDisp" class="text-2xl font-black text-blue-400">0.00</div>
+                    </div>
+                    <div class="text-left">
+                        <span class="text-[9px] opacity-40 block uppercase">الإجمالي النهائي</span>
+                        <div id="totalDisp" class="text-2xl font-black text-green-400">0.00</div>
+                    </div>
+                </div>
+
+                <button onclick="saveItem('order')" class="w-full bg-blue-600 p-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all">
+                    إضافة إلى السجل <i class="fas fa-check-circle ml-1"></i>
+                </button>
+            </div>
+
+            <!-- Payment -->
+            <div class="bg-emerald-600 text-white p-4 rounded-2xl flex items-center gap-3">
+                <input type="number" id="payAmt" class="flex-1 bg-white/20 p-3 rounded-xl font-bold placeholder:text-white/50 outline-none" placeholder="تسجيل دفعة نقدية">
+                <button onclick="saveItem('payment')" class="bg-white text-emerald-700 px-6 py-3 rounded-xl font-bold">حفظ</button>
+            </div>
+        </div>
+
+        <!-- Tab: Ledger -->
+        <div id="tab-ledger" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                    <h2 class="font-bold text-slate-800" id="lName">سجل المعاملات</h2>
+                    <div class="text-left">
+                        <span class="text-[8px] opacity-50 block uppercase">الرصيد الكلي</span>
+                        <span id="lBalance" class="text-lg font-black text-red-600">0.00</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-[10px] text-right">
+                        <thead class="bg-slate-100 text-slate-500">
+                            <tr>
+                                <th class="p-3">البيان</th>
+                                <th class="p-3 text-center">مدين</th>
+                                <th class="p-3 text-center">دائن</th>
+                                <th class="p-3 text-center">الرصيد</th>
+                                <th class="p-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledgerBody"></tbody>
+                    </table>
+                </div>
+                <div class="p-4 space-y-2">
+                    <button onclick="shareWhatsApp()" class="w-full bg-green-500 text-white p-4 rounded-xl font-black flex items-center justify-center gap-2">
+                        <i class="fab fa-whatsapp text-xl"></i> إرسال الكشف للعميل
+                    </button>
+                    <button onclick="exportData()" class="w-full bg-slate-100 text-slate-500 p-2 rounded-lg text-xs font-bold">تصدير إكسيل (CSV)</button>
                 </div>
             </div>
-
-            <button onclick="addTransaction('order')" class="w-full bg-blue-500 hover:bg-blue-400 p-4 rounded-xl font-black flex items-center justify-center gap-2 transition-transform active:scale-95">
-                إضافة للفاتورة <i class="fas fa-plus"></i>
-            </button>
         </div>
 
-        <!-- Payments -->
-        <div class="bg-green-600 text-white p-4 rounded-2xl shadow-md no-print flex gap-2">
-            <input type="number" id="payAmount" class="w-1/2 bg-white/20 border-none p-3 rounded-xl font-bold placeholder:text-white/50 outline-none" placeholder="مبلغ الدفعة">
-            <button onclick="addTransaction('payment')" class="w-1/2 bg-white text-green-700 font-bold rounded-xl transition-transform active:scale-95">تسجيل دفعة</button>
-        </div>
-
-        <!-- Ledger Table Card -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
-                <h3 class="font-bold text-slate-800 text-xs">سجل الحساب التراكمي</h3>
-                <span id="displayCust" class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold">---</span>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-[11px] text-right">
-                    <thead class="bg-slate-50 text-slate-400">
-                        <tr>
-                            <th class="p-3 font-medium">البيان</th>
-                            <th class="p-3 text-center">مدين</th>
-                            <th class="p-3 text-center">دائن</th>
-                            <th class="p-3 text-center bg-blue-50/50">الرصيد</th>
-                            <th class="p-3 no-print"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="ledgerBody" class="divide-y divide-slate-50">
-                        <!-- تملأ برمجياً -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Sticky Bottom Summary -->
-    <div class="sticky-summary bg-slate-900 text-white p-4 mx-3 rounded-t-3xl shadow-[0_-10px_20px_rgba(0,0,0,0.1)] no-print">
-        <div class="flex justify-between items-center">
-            <div>
-                <span class="text-[10px] opacity-50 block">صافي المديونية</span>
-                <div id="finalBalance" class="text-3xl font-black text-blue-400">0.00</div>
-            </div>
-            <button onclick="sendWhatsApp()" class="bg-green-500 p-3 px-5 rounded-2xl font-bold flex items-center gap-2">
-                <i class="fab fa-whatsapp text-xl"></i> واتساب
-            </button>
-        </div>
-    </div>
+    </main>
 
     <script>
-        // قاعدة البيانات المختصرة للموبايل
-        const PRICES = {
-            "شنط يد (داخلية)": [
-                { s: "16×20", p: 1.52 }, { s: "20×30", p: 1.82 }, { s: "25×30", p: 2.03 }, { s: "30×40", p: 3.23 }, { s: "40×50", p: 4.26 }, { s: "50×60", p: 5.94 }
-            ],
-            "شنط يد (خارجية)": [
-                { s: "30×30", p: 2.69 }, { s: "35×40", p: 3.51 }, { s: "40×50", p: 4.46 }, { s: "50×60", p: 6.14 }, { s: "60×70", p: 8.13 }
-            ],
-            "شنط بوكس (Box)": [
-                { s: "20×30", p: 3.37 }, { s: "30×40", p: 4.39 }, { s: "40×50", p: 5.82 }
-            ],
-            "شنطة تورتة": [
-                { s: "30×30", p: 3.11 }, { s: "35×35", p: 3.91 }, { s: "40×40", p: 5.80 }
-            ]
+        const OWNER_PHONE = "201279039059";
+        const MENU = {
+            "يد داخلية": [ {s:"16×22", p:1.52}, {s:"20×30", p:1.82}, {s:"25×30", p:2.03}, {s:"30×40", p:3.23}, {s:"40×50", p:4.26}, {s:"50×60", p:5.94} ],
+            "هاندل": [ {s:"30×30", p:2.69}, {s:"35×45", p:3.69}, {s:"40×50", p:4.46}, {s:"50×60", p:6.14} ],
+            "بوكس": [ {s:"20×30", p:3.37}, {s:"30×40", p:4.39}, {s:"40×50", p:5.82} ],
+            "تورتة": [ {s:"30×30", p:3.11}, {s:"35×35", p:3.91}, {s:"40×40", p:5.80} ]
         };
 
-        let appData = JSON.parse(localStorage.getItem('king_mobile_v1')) || {};
-        let activeBase = 0;
-        let activeProd = { c: "", s: "" };
+        let db = JSON.parse(localStorage.getItem('kp_v7_db')) || {};
+        let calcMode = 'printed'; 
+        let selTxt = "";
 
         window.onload = () => {
-            renderAccordions();
+            document.getElementById('orderDate').valueAsDate = new Date();
+            renderPriceMenu();
         };
 
-        function renderAccordions() {
-            const container = document.getElementById('priceListContainer');
-            for (let [cat, items] of Object.entries(PRICES)) {
-                let html = `
-                    <div class="border-b last:border-0 accordion-item">
-                        <button onclick="this.parentElement.classList.toggle('accordion-open')" class="w-full p-4 flex justify-between items-center text-sm font-bold text-slate-600">
-                            ${cat} <i class="fas fa-chevron-left text-[10px] transition-transform"></i>
+        function renderPriceMenu() {
+            const m = document.getElementById('priceMenu');
+            m.innerHTML = "";
+            for (let [cat, items] of Object.entries(MENU)) {
+                m.innerHTML += `
+                    <div class="accordion-item">
+                        <button onclick="this.parentElement.classList.toggle('accordion-open')" class="w-full p-3 flex justify-between items-center text-xs font-bold text-slate-600 bg-white">
+                            ${cat} <i class="fas fa-chevron-down opacity-20"></i>
                         </button>
-                        <div class="accordion-content bg-slate-50 grid grid-cols-2 gap-2 p-0">
-                            <div class="grid grid-cols-2 gap-2 p-3 w-[200%] md:w-full">
-                                ${items.map(it => `
-                                    <button onclick="selectItem('${cat}', '${it.s}', ${it.p})" class="p-2 border rounded-lg bg-white text-[10px] flex justify-between item-btn" data-size="${it.s}">
-                                        <span>${it.s}</span> <b>${it.p}</b>
-                                    </button>
-                                `).join('')}
-                            </div>
+                        <div class="accordion-content bg-slate-50 grid grid-cols-2 gap-2 p-3">
+                            ${items.map(it => `<button onclick="pick('${cat}','${it.s}',${it.p})" class="p-2 border rounded-lg bg-white text-[10px] flex justify-between btn-m" data-s="${it.s}"><span>${it.s}</span><b>${it.p}</b></button>`).join('')}
                         </div>
                     </div>`;
-                container.innerHTML += html;
             }
         }
 
-        function selectItem(cat, size, price) {
-            activeBase = price;
-            activeProd = { c: cat, s: size };
-            document.querySelectorAll('.item-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-blue-50'));
-            event.currentTarget.classList.add('border-blue-500', 'bg-blue-50');
-            calculatePrice();
+        function setCalcMode(mode) {
+            calcMode = mode;
+            document.getElementById('mode-printed').className = mode === 'printed' ? 'flex-1 p-3 rounded-xl font-black text-xs transition-all mode-selected' : 'flex-1 p-3 rounded-xl font-black text-xs transition-all bg-slate-50 text-slate-400 border border-transparent';
+            document.getElementById('mode-plain').className = mode === 'plain' ? 'flex-1 p-3 rounded-xl font-black text-xs transition-all mode-selected' : 'flex-1 p-3 rounded-xl font-black text-xs transition-all bg-slate-50 text-slate-400 border border-transparent';
+            
+            document.getElementById('priceMenuContainer').style.display = (mode === 'printed') ? 'block' : 'none';
+            document.getElementById('colorOptions').style.display = (mode === 'printed') ? 'grid' : 'none';
+            document.getElementById('priceInputLabel').innerText = (mode === 'printed') ? 'سعر القطعة (إدخال مرن)' : 'سعر الكيلو (إدخال مرن)';
+            document.getElementById('unitLabelDisp').innerText = (mode === 'printed') ? 'صافي سعر القطعة' : 'سعر الكيلو المعتمد';
+            
+            document.getElementById('unitPriceInput').value = "";
+            calc();
         }
 
-        function calculatePrice() {
-            if (!activeBase) return;
-            let p = activeBase;
-            p += (parseInt(document.getElementById('extraColors').value) * 0.15);
-            p += parseFloat(document.getElementById('specialColor').value);
-            document.getElementById('finalUnitPrice').innerText = p.toFixed(2);
+        function pick(c, s, p) {
+            document.getElementById('unitPriceInput').value = p;
+            selTxt = `${c} ${s}`;
+            document.querySelectorAll('.btn-m').forEach(b => b.classList.remove('ring-2','ring-blue-500'));
+            event.currentTarget.classList.add('ring-2','ring-blue-500');
+            calc();
         }
 
-        function addTransaction(type) {
-            const name = document.getElementById('customerName').value.trim();
-            if (!name) return alert("اكتب اسم العميل");
-            if (!appData[name]) appData[name] = [];
+        function calc() {
+            let unitPrice = parseFloat(document.getElementById('unitPriceInput').value) || 0;
+            let qty = parseInt(document.getElementById('qty').value) || 0;
+            let weight = parseFloat(document.getElementById('weight').value) || 0;
+            let disc = parseInt(document.getElementById('discount').value) || 0;
+            
+            let total = 0;
+            let finalUnit = unitPrice;
 
-            let entry = { ts: Date.now(), d: new Date().toLocaleDateString('ar-EG'), db: 0, cr: 0, desc: "" };
-
-            if (type === 'order') {
-                const final = parseFloat(document.getElementById('finalUnitPrice').innerText);
-                const qty = parseInt(document.getElementById('qtyInput').value);
-                if (!qty) return alert("ادخل الكمية");
-                entry.db = final * qty;
-                entry.desc = `${activeProd.s} (${qty}ق)`;
+            if (calcMode === 'printed') {
+                finalUnit += parseFloat(document.getElementById('colorAdd').value);
+                finalUnit += parseFloat(document.getElementById('specialAdd').value);
+                total = finalUnit * qty;
             } else {
-                const amt = parseFloat(document.getElementById('payAmount').value);
-                if (!amt) return alert("ادخل المبلغ");
-                entry.cr = amt;
-                entry.desc = "دفعة نقدية";
+                total = unitPrice * weight;
             }
 
-            appData[name].push(entry);
-            save();
-            document.getElementById('qtyInput').value = "";
-            document.getElementById('payAmount').value = "";
+            if (disc > 0) total -= (total * (disc / 100));
+
+            document.getElementById('finalUnitDisp').innerText = finalUnit.toFixed(2);
+            document.getElementById('totalDisp').innerText = total.toLocaleString(undefined, {minimumFractionDigits:2});
         }
 
-        function loadLedger() {
-            const name = document.getElementById('customerName').value.trim();
-            document.getElementById('displayCust').innerText = name || "---";
-            renderTable();
+        function saveItem(type) {
+            const name = document.getElementById('custName').value.trim();
+            if (!name) return alert("سجل اسم العميل أولاً");
+            if (!db[name]) db[name] = [];
+
+            let row = { id: Date.now(), date: document.getElementById('orderDate').value, db: 0, cr: 0, desc: "", w: "" };
+            
+            if (type === 'order') {
+                const total = parseFloat(document.getElementById('totalDisp').innerText.replace(/,/g, ''));
+                if (!total || total <= 0) return alert("تأكد من إدخال السعر والكمية أو الوزن");
+                
+                row.db = total;
+                row.w = document.getElementById('weight').value;
+                
+                if (calcMode === 'printed') {
+                    row.desc = `مطبوع: ${selTxt || 'يدوي'} | ${document.getElementById('qty').value} ق`;
+                } else {
+                    row.desc = `سادة: ${document.getElementById('weight').value} كجم | @ ${document.getElementById('unitPriceInput').value}`;
+                }
+                
+                if (document.getElementById('discount').value > 0) row.desc += ` (خ ${document.getElementById('discount').value}%)`;
+            } else {
+                const amt = parseFloat(document.getElementById('payAmt').value);
+                if (!amt) return alert("ادخل مبلغ الدفعة");
+                row.cr = amt; row.desc = "دفعة نقدية";
+            }
+
+            db[name].push(row);
+            localStorage.setItem('kp_v7_db', JSON.stringify(db));
+            alert("تم تسجيل المعاملة");
+            ['qty','weight','discount','payAmt', 'unitPriceInput'].forEach(i => document.getElementById(i).value = "");
+            selTxt = "";
+            calc();
+            if (type === 'payment') render();
         }
 
-        function renderTable() {
-            const name = document.getElementById('customerName').value.trim();
-            const body = document.getElementById('ledgerBody');
-            body.innerHTML = "";
+        function switchTab(t) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + t).classList.add('active');
+            document.getElementById('btn-ledger').classList.toggle('btn-active', t==='ledger');
+            document.getElementById('btn-entry').classList.toggle('btn-active', t==='entry');
+            if (t === 'ledger') render();
+        }
+
+        function render() {
+            const name = document.getElementById('custName').value.trim();
+            document.getElementById('lName').innerText = name || "سجل الحساب";
+            const body = document.getElementById('ledgerBody'); body.innerHTML = "";
             let balance = 0;
-
-            if (appData[name]) {
-                appData[name].forEach((t, i) => {
-                    balance += (t.db - t.cr);
+            if (db[name]) {
+                db[name].sort((a,b) => new Date(a.date)-new Date(b.date)).forEach((r, i) => {
+                    balance += (r.db - r.cr);
                     body.innerHTML += `
                         <tr class="border-b border-slate-50">
-                            <td class="p-3">
-                                <div class="font-bold">${t.desc}</div>
-                                <div class="text-[8px] text-slate-400">${t.d}</div>
-                            </td>
-                            <td class="p-3 text-center text-red-500 font-bold">${t.db || '-'}</td>
-                            <td class="p-3 text-center text-green-600 font-bold">${t.cr || '-'}</td>
+                            <td class="p-3"><b>${r.desc}</b><br><small class="opacity-40">${r.date} ${r.w ? '| '+r.w+'ك':''}</small></td>
+                            <td class="p-3 text-center text-red-500 font-bold">${r.db ? r.db.toLocaleString():'-'}</td>
+                            <td class="p-3 text-center text-green-600 font-bold">${r.cr ? r.cr.toLocaleString():'-'}</td>
                             <td class="p-3 text-center bg-blue-50/30 font-black">${balance.toLocaleString()}</td>
-                            <td class="p-3 no-print">
-                                <button onclick="deleteEntry('${name}', ${i})" class="text-slate-200"><i class="fas fa-times-circle"></i></button>
-                            </td>
-                        </tr>
-                    `;
+                            <td class="p-3"><button onclick="remove('${name}',${r.id})" class="text-slate-300"><i class="fas fa-trash"></i></button></td>
+                        </tr>`;
                 });
             }
-            document.getElementById('finalBalance').innerText = balance.toLocaleString();
+            document.getElementById('lBalance').innerText = balance.toLocaleString();
         }
 
-        function deleteEntry(n, i) {
-            if(confirm("حذف؟")) { appData[n].splice(i, 1); save(); }
+        function remove(n, id) { if(confirm("حذف هذه العملية؟")) { db[n]=db[n].filter(x=>x.id!==id); localStorage.setItem('kp_v7_db', JSON.stringify(db)); render(); } }
+
+        function shareWhatsApp() {
+            const name = document.getElementById('custName').value;
+            const bal = document.getElementById('lBalance').innerText;
+            const text = `*مصنع كينج بلاست*%0A*كشف حساب:* ${name}%0A*الرصيد المتبقي:* ${bal} ج.م%0A-----------------------%0Aشكراً لتعاملكم معنا.`;
+            window.open(`https://wa.me/?text=${text}`, '_blank');
         }
 
-        function save() {
-            localStorage.setItem('king_mobile_v1', JSON.stringify(appData));
-            renderTable();
-        }
-
-        function sendWhatsApp() {
-            const name = document.getElementById('customerName').value;
-            const bal = document.getElementById('finalBalance').innerText;
-            window.open(`https://wa.me/?text=*كينج بلاست*%0A*كشف حساب:* ${name}%0A*الرصيد النهائي:* ${bal} ج.م`, '_blank');
-        }
-
-        function exportToCSV() {
-            const name = document.getElementById('customerName').value;
-            if(!appData[name]) return;
-            let csv = "\uFEFFالبيان,مدين,دائن,الرصيد\n";
+        function exportData() {
+            const name = document.getElementById('custName').value; if(!db[name]) return;
+            let csv = "\uFEFFالتاريخ,البيان,مدين,دائن,الرصيد\n";
             let b = 0;
-            appData[name].forEach(t => { b += (t.db-t.cr); csv += `${t.desc},${t.db},${t.cr},${b}\n`; });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-            link.download = `حساب_${name}.csv`;
-            link.click();
+            db[name].forEach(r => { b+=(r.db-r.cr); csv += `${r.date},${r.desc},${r.db},${r.cr},${b}\n`; });
+            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+            link.download = `حساب_${name}.csv`; link.click();
         }
     </script>
 </body>
